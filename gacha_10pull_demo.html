@@ -1,0 +1,830 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no" />
+<title>스킨 뽑기창 만들어봤습니다 ㅋㅋㅋ (리니지 느낌으로 ㅋ)</title>
+<style>
+  :root{
+    --bg0:#06080b;
+    --bg1:#0b1020;
+    --card:#0f172a;
+    --line:rgba(255,255,255,.10);
+    --txt:rgba(255,255,255,.92);
+    --muted:rgba(255,255,255,.62);
+    --glow:rgba(120,220,255,.30);
+    --accent:rgba(120,220,255,.85);
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%; margin:0; background: radial-gradient(120% 120% at 20% 10%, rgba(255,210,120,.10), transparent 55%),
+                                 radial-gradient(120% 140% at 80% 70%, rgba(120,220,255,.10), transparent 60%),
+                                 linear-gradient(180deg, var(--bg0), var(--bg1));
+            color:var(--txt); overflow:hidden; font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans KR", sans-serif;}
+  /* selection off (game-like) */
+  body, button, .ui, .panel, .card, .pill{ user-select:none; -webkit-user-select:none; -webkit-tap-highlight-color:transparent; }
+
+  .wrap{
+    position:fixed; inset:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:14px;
+  }
+  .panel{
+    width:min(980px, 96vw);
+    height:min(640px, 92vh);
+    border-radius:22px;
+    background: rgba(0,0,0,.30);
+    outline: 1px solid var(--line);
+    box-shadow: 0 24px 80px rgba(0,0,0,.55);
+    backdrop-filter: blur(3px);
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+  }
+  .topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    padding:14px 16px;
+    background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(0,0,0,0));
+    border-bottom:1px solid rgba(255,255,255,.08);
+  }
+  .title{
+    display:flex; flex-direction:column; gap:3px;
+    min-width:0;
+  }
+  .title .h{
+    font-weight:1000; letter-spacing:-0.02em;
+    font-size:18px;
+  }
+  .title .s{
+    font-weight:700;
+    color:var(--muted);
+    font-size:12px;
+  }
+  .controls{
+    display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+    justify-content:flex-end;
+  }
+  .pill{
+    display:flex; align-items:center; gap:8px;
+    padding:9px 11px;
+    border-radius:999px;
+    background: rgba(255,255,255,.07);
+    outline:1px solid rgba(255,255,255,.10);
+    box-shadow: 0 10px 22px rgba(0,0,0,.30);
+    color:rgba(255,255,255,.88);
+    font-weight:800;
+    font-size:12px;
+  }
+  .pill small{color:var(--muted); font-weight:800}
+  .btn{
+    appearance:none; border:none; cursor:pointer;
+    padding:10px 14px;
+    border-radius:14px;
+    font-weight:1000;
+    letter-spacing:0.02em;
+    color:rgba(255,255,255,.95);
+    background: rgba(255,255,255,.10);
+    outline: 1px solid rgba(255,255,255,.14);
+    box-shadow: 0 12px 26px rgba(0,0,0,.38);
+    transition: transform .08s ease, filter .12s ease, outline-color .12s ease;
+  }
+  .btn:active{transform: translateY(1px) scale(.99); filter:brightness(.98)}
+  .btn.primary{
+    background: linear-gradient(180deg, rgba(120,220,255,.90), rgba(80,150,255,.80));
+    outline: 1px solid rgba(120,220,255,.35);
+    box-shadow: 0 14px 32px rgba(0,0,0,.45), 0 0 28px rgba(120,220,255,.18);
+  }
+  .btn.danger{
+    background: linear-gradient(180deg, rgba(255,120,120,.85), rgba(200,70,70,.78));
+    outline: 1px solid rgba(255,150,150,.30);
+  }
+  .toggle{
+    display:flex; align-items:center; gap:8px;
+    padding:8px 10px;
+    border-radius:14px;
+    background: rgba(255,255,255,.06);
+    outline:1px solid rgba(255,255,255,.10);
+    font-weight:900;
+    font-size:12px;
+    color:rgba(255,255,255,.86);
+  }
+  .toggle input{ width:16px; height:16px; accent-color: rgba(120,220,255,.85); }
+
+  .main{
+    position:relative;
+    flex:1;
+    display:flex;
+    gap:14px;
+    padding:14px;
+    overflow:hidden;
+  }
+  .stage{
+    position:relative;
+    flex: 1 1 auto;
+    border-radius:18px;
+    background: rgba(0,0,0,.18);
+    outline:1px solid rgba(255,255,255,.08);
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+  }
+  .stageHead{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:10px 12px;
+    border-bottom:1px solid rgba(255,255,255,.06);
+  }
+  .stageHead .lh{
+    font-weight:1000;
+    letter-spacing:-0.02em;
+  }
+  .stageHead .rh{
+    font-size:12px;
+    color:var(--muted);
+    font-weight:800;
+  }
+
+  .grid{
+    flex:1;
+    display:grid;
+    grid-template-columns: repeat(5, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    gap:12px;
+    padding:12px;
+  }
+  .card{
+    position:relative;
+    border-radius:18px;
+    background: rgba(255,255,255,.06);
+    outline: 1px solid rgba(255,255,255,.10);
+    box-shadow: 0 14px 26px rgba(0,0,0,.28);
+    overflow:hidden;
+    cursor:pointer;
+    transform: translateZ(0);
+  }
+  .card .back{
+    position:absolute; inset:0;
+    display:flex; align-items:center; justify-content:center;
+    font-weight:1000;
+    letter-spacing:0.16em;
+    color: rgba(255,255,255,.78);
+    text-shadow: 0 2px 16px rgba(0,0,0,.55);
+  }
+  .card .back::before{
+    content:"";
+    position:absolute; inset:-30%;
+    background:
+      radial-gradient(circle at 35% 25%, rgba(255,255,255,.12), transparent 55%),
+      radial-gradient(circle at 65% 75%, rgba(120,220,255,.14), transparent 55%),
+      conic-gradient(from 180deg, rgba(255,210,120,.12), rgba(120,220,255,.12), rgba(255,210,120,.12));
+    filter: blur(10px);
+    opacity:.7;
+    animation: swirl 2.8s linear infinite;
+  }
+  @keyframes swirl{ to{ transform: rotate(360deg); } }
+  .card .back span{ position:relative; z-index:1; font-size:12px; }
+
+  .card .front{
+    position:absolute; inset:0;
+    display:flex; flex-direction:column;
+    padding:12px;
+    opacity:0;
+    transform: scale(.98);
+  }
+  .card .front .rar{
+    display:flex; align-items:center; justify-content:space-between;
+    gap:8px;
+  }
+  .badge{
+    font-weight:1000;
+    font-size:11px;
+    padding:6px 10px;
+    border-radius:999px;
+    outline:1px solid rgba(255,255,255,.14);
+    background: rgba(0,0,0,.25);
+    letter-spacing:0.03em;
+  }
+  .badge.r0{ background: rgba(255,255,255,.06); }
+  .badge.r1{ background: rgba(80,255,140,.10); outline-color: rgba(80,255,140,.20); }
+  .badge.r2{ background: rgba(120,220,255,.10); outline-color: rgba(120,220,255,.22); }
+  .badge.r3{ background: rgba(200,140,255,.12); outline-color: rgba(200,140,255,.25); }
+  .badge.r4{ background: rgba(255,210,120,.14); outline-color: rgba(255,210,120,.28); }
+  .tag{
+    font-weight:900;
+    font-size:11px;
+    color: rgba(255,255,255,.75);
+  }
+
+  .art{
+    flex:1;
+    border-radius:16px;
+    margin-top:10px;
+    background:
+      radial-gradient(120% 120% at 30% 25%, rgba(255,255,255,.12), rgba(0,0,0,0) 60%),
+      radial-gradient(120% 120% at 70% 75%, rgba(120,220,255,.10), rgba(0,0,0,0) 65%),
+      rgba(0,0,0,.18);
+    outline:1px solid rgba(255,255,255,.06);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    position:relative;
+    overflow:hidden;
+  }
+  .glyph{
+    font-weight:1000;
+    font-size:34px;
+    letter-spacing:-0.02em;
+    text-shadow:0 10px 26px rgba(0,0,0,.55);
+    opacity:.92;
+  }
+  .name{
+    margin-top:10px;
+    font-weight:1000;
+    letter-spacing:-0.02em;
+    font-size:14px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .desc{
+    margin-top:6px;
+    font-size:12px;
+    color:var(--muted);
+    font-weight:800;
+    line-height:1.25;
+    height:2.5em;
+    overflow:hidden;
+  }
+
+  /* Reveal animation */
+  .card.revealing{ pointer-events:none; }
+  .card.revealed{ cursor:default; }
+  .card.revealing .back{ animation: flipOut .48s ease forwards; }
+  .card.revealing .front{ animation: flipIn .48s ease .18s forwards; }
+  @keyframes flipOut{
+    0%{ transform: rotateY(0deg); opacity:1; }
+    100%{ transform: rotateY(90deg); opacity:0; }
+  }
+  @keyframes flipIn{
+    0%{ transform: rotateY(-90deg) scale(.98); opacity:0; }
+    100%{ transform: rotateY(0deg) scale(1); opacity:1; }
+  }
+
+  /* Rarity frame glow */
+  .card[data-r="0"]{ box-shadow: 0 14px 26px rgba(0,0,0,.28); }
+  .card[data-r="1"]{ box-shadow: 0 14px 28px rgba(0,0,0,.30), 0 0 0 1px rgba(80,255,140,.18), 0 0 24px rgba(80,255,140,.12); }
+  .card[data-r="2"]{ box-shadow: 0 14px 28px rgba(0,0,0,.30), 0 0 0 1px rgba(120,220,255,.20), 0 0 26px rgba(120,220,255,.14); }
+  .card[data-r="3"]{ box-shadow: 0 14px 28px rgba(0,0,0,.30), 0 0 0 1px rgba(200,140,255,.22), 0 0 28px rgba(200,140,255,.14); }
+  .card[data-r="4"]{ box-shadow: 0 14px 30px rgba(0,0,0,.32), 0 0 0 1px rgba(255,210,120,.26), 0 0 34px rgba(255,210,120,.16); }
+
+  /* Side panel */
+  .side{
+    width: min(320px, 36vw);
+    border-radius:18px;
+    background: rgba(0,0,0,.18);
+    outline:1px solid rgba(255,255,255,.08);
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+  }
+  .sideHead{
+    padding:10px 12px;
+    border-bottom:1px solid rgba(255,255,255,.06);
+    display:flex; align-items:center; justify-content:space-between;
+    gap:10px;
+  }
+  .sideHead .lh{ font-weight:1000; }
+  .sideHead .rh{ font-size:12px; color:var(--muted); font-weight:800; }
+  .log{
+    flex:1;
+    padding:10px 10px 12px;
+    overflow:auto;
+    font: 800 12px/1.35 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Noto Sans KR", monospace;
+    color: rgba(255,255,255,.85);
+  }
+  .log .row{
+    padding:8px 10px;
+    border-radius:12px;
+    background: rgba(255,255,255,.05);
+    outline: 1px solid rgba(255,255,255,.06);
+    margin-bottom:8px;
+  }
+  .log .row .t{ display:flex; justify-content:space-between; gap:10px; }
+  .log .row .t b{ font-weight:1000; }
+  .log .row .t span{ color:var(--muted); font-weight:900; }
+  .log .row .n{ margin-top:4px; font-weight:900; }
+
+  /* FX overlay */
+  #fx{
+    position:absolute; inset:0;
+    pointer-events:none;
+    z-index:50;
+  }
+  .flash{
+    position:absolute; inset:-10%;
+    background: radial-gradient(circle at 50% 50%, rgba(255,255,255,.28), rgba(255,255,255,0) 60%);
+    opacity:0;
+  }
+  .flash.on{ animation: flash .52s ease; }
+  @keyframes flash{
+    0%{ opacity:0; transform: scale(.9); }
+    22%{ opacity:1; transform: scale(1.02); }
+    100%{ opacity:0; transform: scale(1.06); }
+  }
+  .burst{
+    position:absolute;
+    left:50%; top:50%;
+    width: 10px; height:10px;
+    transform: translate(-50%,-50%);
+    opacity:0;
+  }
+  .burst.on{ opacity:1; animation: burst 1.05s ease forwards; }
+  @keyframes burst{
+    0%{ transform: translate(-50%,-50%) scale(.6); filter: blur(0px); }
+    60%{ transform: translate(-50%,-50%) scale(1.2); filter: blur(.2px); }
+    100%{ transform: translate(-50%,-50%) scale(1.5); opacity:0; filter: blur(1px); }
+  }
+  .spark{
+    position:absolute;
+    width:6px; height:6px;
+    border-radius:999px;
+    background: rgba(255,255,255,.85);
+    box-shadow: 0 0 14px rgba(255,255,255,.35);
+    transform: translate(-50%,-50%);
+    opacity:.95;
+  }
+
+  /* Footer */
+  .foot{
+    padding:12px 16px;
+    border-top:1px solid rgba(255,255,255,.08);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    color: var(--muted);
+    font-weight:800;
+    font-size:12px;
+  }
+
+  @media (max-width: 860px){
+    .main{ flex-direction:column; }
+    .side{ width:100%; height: 200px; }
+    .grid{ gap:10px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="panel ui" id="panel">
+    <div class="topbar">
+      <div class="title">
+        <div class="h">뽑기창 샘플</div>
+        <div class="s">※ 테스트용 데모입니다. (확률/등급/연출/스킵/로그)</div>
+      </div>
+      <div class="controls">
+        <div class="pill" title="테스트 재화 (데모)">
+          <span>다이아</span>
+          <b id="gem">2000</b>
+          <small> / 10연속: 1000</small>
+        </div>
+        <label class="toggle" title="연출 스킵">
+          <input id="skip" type="checkbox" />
+          <span>스킵</span>
+        </label>
+        <button class="btn" id="resetBtn">리셋</button>
+        <button class="btn primary" id="pullBtn">10연속 뽑기</button>
+      </div>
+    </div>
+
+    <div class="main">
+      <div class="stage">
+        <div class="stageHead">
+          <div class="lh">결과 카드 (10장)</div>
+          <div class="rh" id="stageHint">버튼을 눌러 뽑아보세요</div>
+        </div>
+        <div class="grid" id="grid"></div>
+        <div id="fx">
+          <div class="flash" id="flash"></div>
+          <div class="burst" id="burst"></div>
+        </div>
+      </div>
+
+      <div class="side">
+        <div class="sideHead">
+          <div class="lh">룻 로그</div>
+          <div class="rh"><span id="pityTxt">천장(테스트): 0</span></div>
+        </div>
+        <div class="log" id="log"></div>
+      </div>
+    </div>
+
+    <div class="foot">
+      <div>확률(기본): 일반 70% / 고급 20% / 희귀 8% / 영웅 1.8% / 전설 0.2%</div>
+      <div>규칙(데모): 10연속에 “희귀 이상 1개 보장” + “천장: 50회마다 영웅↑ 1개 보장”</div>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  // ====== CONFIG ======
+  const COST_10 = 1000;
+
+  // rarity: 0 일반, 1 고급, 2 희귀, 3 영웅, 4 전설
+  const RARITY = [
+    { k: "일반", w: 70.0, glyph: "○", tag: "COMMON"  },
+    { k: "고급", w: 20.0, glyph: "◇", tag: "UNCOMMON"},
+    { k: "희귀", w: 8.0,  glyph: "◆", tag: "RARE"   },
+    { k: "영웅", w: 1.8,  glyph: "✦", tag: "HERO"   },
+    { k: "전설", w: 0.2,  glyph: "✷", tag: "LEGEND" },
+  ];
+
+  const SKIN_POOL = {
+    0: ["견습 전사", "초보 도적", "마을 사냥꾼", "숲의 방랑자", "낡은 기사"],
+    1: ["은빛 전사", "그림자 도적", "바람 궁수", "흑철 용병", "숲의 수호자"],
+    2: ["서리 기사", "적안 암살자", "성기사 서약", "연금술 학자", "용린 전사"],
+    3: ["태양 성기사", "심연 암살자", "천공 궁수", "황혼 마도사"],
+    4: ["초월자", "왕의 계승자", "고대의 용기사"],
+  };
+
+  const PET_POOL = {
+    0: ["작은 토끼", "병아리", "아기 여우", "고양이", "강아지"],
+    1: ["달빛 여우", "까마귀", "늑대 새끼", "비단 고양이"],
+    2: ["백호", "화염 늑대", "빙결 곰", "바람 매"],
+    3: ["천둥 그리핀", "심연 늑대왕", "서리 여왕사슴"],
+    4: ["고대 드래곤(펫)", "별의 키메라"],
+  };
+
+  // 데모: 스킨/펫 혼합으로 나오게
+  const TYPE_WEIGHT = [
+    {t:"스킨", w: 55},
+    {t:"펫", w: 45},
+  ];
+
+  // Pity (천장) - 테스트:
+  // - 50회마다 "영웅 이상" 1개 보장
+  const PITY_STEP = 50;
+
+  const LS_KEY = "gacha_demo_state_v1";
+
+  // ====== STATE ======
+  const state = loadState();
+
+  // ====== DOM ======
+  const $ = (s)=>document.querySelector(s);
+  const grid = $("#grid");
+  const logEl = $("#log");
+  const pullBtn = $("#pullBtn");
+  const resetBtn = $("#resetBtn");
+  const gemEl = $("#gem");
+  const hintEl = $("#stageHint");
+  const skipEl = $("#skip");
+  const pityTxt = $("#pityTxt");
+  const flash = $("#flash");
+  const burst = $("#burst");
+
+  // ====== INIT ======
+  renderCurrency();
+  renderPity();
+  buildEmptyCards();
+  renderLog();
+
+  pullBtn.addEventListener("click", () => doTenPull());
+  resetBtn.addEventListener("click", () => {
+    if(!confirm("데모 상태(재화/로그/천장)를 초기화할까요?")) return;
+    localStorage.removeItem(LS_KEY);
+    location.reload();
+  });
+
+  // ====== HELPERS ======
+  function loadState(){
+    try{
+      const raw = localStorage.getItem(LS_KEY);
+      if(!raw) return { gems: 2000, pity: 0, history: [] };
+      const obj = JSON.parse(raw);
+      return {
+        gems: Number(obj.gems ?? 2000),
+        pity: Number(obj.pity ?? 0),
+        history: Array.isArray(obj.history) ? obj.history.slice(-30) : []
+      };
+    }catch(e){
+      return { gems: 2000, pity: 0, history: [] };
+    }
+  }
+  function saveState(){
+    localStorage.setItem(LS_KEY, JSON.stringify(state));
+  }
+
+  function renderCurrency(){ gemEl.textContent = String(state.gems); }
+  function renderPity(){ pityTxt.textContent = "천장(테스트): " + state.pity; }
+
+  function weightedPick(list){
+    const sum = list.reduce((a,b)=>a + b.w, 0);
+    let r = Math.random() * sum;
+    for(const it of list){
+      r -= it.w;
+      if(r <= 0) return it;
+    }
+    return list[list.length-1];
+  }
+
+  function rollRarity(){
+    // 기본 확률
+    const pick = weightedPick(RARITY.map((r, i)=>({i, w:r.w})));
+    return pick.i;
+  }
+
+  function rollType(){
+    return weightedPick(TYPE_WEIGHT).t;
+  }
+
+  function pickName(type, r){
+    const pool = (type==="스킨" ? SKIN_POOL : PET_POOL);
+    const arr = pool[r] || pool[0];
+    return arr[Math.floor(Math.random()*arr.length)];
+  }
+
+  function rarityColor(r){
+    // used only as computed style; not fixed palette in canvas sense
+    switch(r){
+      case 4: return "rgba(255,210,120,.22)";
+      case 3: return "rgba(200,140,255,.20)";
+      case 2: return "rgba(120,220,255,.18)";
+      case 1: return "rgba(80,255,140,.16)";
+      default:return "rgba(255,255,255,.10)";
+    }
+  }
+
+  function buildEmptyCards(){
+    grid.innerHTML = "";
+    for(let i=0;i<10;i++){
+      const c = document.createElement("div");
+      c.className = "card";
+      c.dataset.idx = String(i);
+      c.innerHTML = `
+        <div class="back"><span>PULL</span></div>
+        <div class="front">
+          <div class="rar">
+            <div class="badge r0">-</div>
+            <div class="tag">-</div>
+          </div>
+          <div class="art"><div class="glyph">?</div></div>
+          <div class="name">대기 중</div>
+          <div class="desc">10연속 뽑기 결과가 여기에 표시됩니다.</div>
+        </div>
+      `;
+      grid.appendChild(c);
+    }
+  }
+
+  function setCard(cardEl, item){
+    const r = item.r;
+    cardEl.dataset.r = String(r);
+    const badge = cardEl.querySelector(".badge");
+    badge.className = "badge r"+r;
+    badge.textContent = RARITY[r].k;
+
+    const tag = cardEl.querySelector(".tag");
+    tag.textContent = item.type;
+
+    const glyph = cardEl.querySelector(".glyph");
+    glyph.textContent = RARITY[r].glyph;
+
+    const art = cardEl.querySelector(".art");
+    art.style.background = `
+      radial-gradient(120% 120% at 30% 25%, rgba(255,255,255,.12), rgba(0,0,0,0) 60%),
+      radial-gradient(120% 120% at 70% 75%, ${rarityColor(r)}, rgba(0,0,0,0) 65%),
+      rgba(0,0,0,.18)
+    `;
+
+    const name = cardEl.querySelector(".name");
+    name.textContent = item.name;
+
+    const desc = cardEl.querySelector(".desc");
+    desc.textContent = item.desc;
+
+    // animate reveal
+    cardEl.classList.remove("revealed");
+    cardEl.classList.add("revealing");
+    // after animation
+    setTimeout(()=>{
+      cardEl.classList.remove("revealing");
+      cardEl.classList.add("revealed");
+    }, 720);
+  }
+
+  function fxBurst(intensity){
+    // intensity 0..4
+    flash.classList.remove("on");
+    burst.classList.remove("on");
+    // clear sparks
+    burst.innerHTML = "";
+
+    const n = 10 + intensity*10;
+    for(let i=0;i<n;i++){
+      const s = document.createElement("div");
+      s.className = "spark";
+      const ang = Math.random()*Math.PI*2;
+      const dist = 30 + Math.random()*(90 + intensity*30);
+      const x = Math.cos(ang)*dist;
+      const y = Math.sin(ang)*dist;
+      s.style.left = "0px";
+      s.style.top  = "0px";
+      s.style.background = intensity>=4 ? "rgba(255,235,170,.92)"
+                           : intensity>=3 ? "rgba(220,170,255,.90)"
+                           : intensity>=2 ? "rgba(140,220,255,.90)"
+                           : intensity>=1 ? "rgba(120,255,170,.88)"
+                           : "rgba(255,255,255,.85)";
+      s.animate([
+        { transform:`translate(-50%,-50%) translate(0px,0px) scale(1)`, opacity: .95 },
+        { transform:`translate(-50%,-50%) translate(${x}px,${y}px) scale(.75)`, opacity: 0 }
+      ], { duration: 820 + intensity*90, easing:"cubic-bezier(.2,.9,.2,1)", fill:"forwards" });
+      burst.appendChild(s);
+    }
+
+    // trigger
+    void flash.offsetWidth;
+    flash.classList.add("on");
+    burst.classList.add("on");
+    setTimeout(()=>{ burst.classList.remove("on"); }, 1100);
+  }
+
+  function addHistory(items){
+    const now = new Date();
+    const stamp = now.toLocaleString("ko-KR", { hour12:false });
+    const best = Math.max(...items.map(x=>x.r));
+    const row = { ts: stamp, best, items: items.map(x=>({r:x.r, type:x.type, name:x.name})) };
+    state.history.unshift(row);
+    state.history = state.history.slice(0, 30);
+  }
+
+  function renderLog(){
+    logEl.innerHTML = "";
+    if(state.history.length === 0){
+      const empty = document.createElement("div");
+      empty.className = "row";
+      empty.innerHTML = `<div class="t"><b>로그 없음</b><span>—</span></div><div class="n">10연속을 한 번 돌려보세요.</div>`;
+      logEl.appendChild(empty);
+      return;
+    }
+    for(const h of state.history){
+      const wrap = document.createElement("div");
+      wrap.className = "row";
+      const bestK = RARITY[h.best].k;
+      wrap.innerHTML = `
+        <div class="t"><b>${h.ts}</b><span>최고등급: ${bestK}</span></div>
+        <div class="n">${h.items.map(it => `${RARITY[it.r].k}·${it.type} <span style="color:rgba(255,255,255,.92)">${escapeHtml(it.name)}</span>`).join("<br/>")}</div>
+      `;
+      logEl.appendChild(wrap);
+    }
+  }
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, (c)=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;" }[c]));
+  }
+
+  function disableUI(disabled){
+    pullBtn.disabled = disabled;
+    resetBtn.disabled = disabled;
+    pullBtn.style.opacity = disabled ? ".55" : "1";
+    resetBtn.style.opacity = disabled ? ".75" : "1";
+    pullBtn.style.cursor = disabled ? "not-allowed" : "pointer";
+    resetBtn.style.cursor = disabled ? "not-allowed" : "pointer";
+  }
+
+  // ====== MAIN FLOW ======
+  async function doTenPull(){
+    if(state.gems < COST_10){
+      hintEl.textContent = "다이아가 부족합니다.";
+      fxBurst(0);
+      return;
+    }
+
+    // spend
+    state.gems -= COST_10;
+    state.pity += 10; // 10연속이니까 10회 증가
+    saveState();
+    renderCurrency();
+    renderPity();
+
+    hintEl.textContent = "뽑기 진행 중…";
+    disableUI(true);
+
+    // build 10 results with rules:
+    // 1) 10연속에 희귀(2) 이상 1개 보장
+    // 2) 천장: 50회마다 영웅(3) 이상 1개 보장 (데모)
+    const skip = !!skipEl.checked;
+
+    let items = [];
+    for(let i=0;i<10;i++){
+      const r = rollRarity();
+      const type = rollType();
+      const name = pickName(type, r);
+      items.push({
+        r, type, name,
+        desc: type==="스킨" ? "장착 시 외형 변경 (데모)"
+                            : "함께 다니는 펫 (데모)"
+      });
+    }
+
+    // guarantee rare+
+    if(!items.some(x => x.r >= 2)){
+      const idx = Math.floor(Math.random()*10);
+      const type = rollType();
+      const r = 2;
+      items[idx] = { r, type, name: pickName(type, r), desc: type==="스킨" ? "희귀 이상 보장 (데모)" : "희귀 이상 보장 (데모)" };
+    }
+
+    // pity rule: every 50 pulls, ensure hero+ in that 10-pull batch
+    // We'll check if pity crossed a multiple of 50 by this batch
+    const prevPity = state.pity - 10;
+    const crossed = Math.floor(prevPity / PITY_STEP) !== Math.floor(state.pity / PITY_STEP);
+    if(crossed && !items.some(x => x.r >= 3)){
+      const idx = Math.floor(Math.random()*10);
+      const type = rollType();
+      const r = 3; // hero guaranteed
+      items[idx] = { r, type, name: pickName(type, r), desc: "천장 보정 (데모)" };
+    }
+
+    // FX intensity based on best rarity
+    const best = Math.max(...items.map(x=>x.r));
+    fxBurst(best);
+
+    // reveal cards
+    const cards = [...grid.querySelectorAll(".card")];
+    // reset states
+    for(const c of cards){
+      c.classList.remove("revealing","revealed");
+      c.dataset.r = "0";
+      // set back/front placeholder quickly
+      c.querySelector(".badge").className = "badge r0";
+      c.querySelector(".badge").textContent = "-";
+      c.querySelector(".tag").textContent = "-";
+      c.querySelector(".glyph").textContent = "?";
+      c.querySelector(".name").textContent = "대기 중";
+      c.querySelector(".desc").textContent = "10연속 뽑기 결과가 여기에 표시됩니다.";
+      c.querySelector(".front").style.opacity = "0";
+      c.querySelector(".front").style.transform = "scale(.98)";
+    }
+
+    if(skip){
+      // instant reveal
+      for(let i=0;i<10;i++){
+        // force show front without waiting flip
+        const c = cards[i];
+        setCardInstant(c, items[i]);
+      }
+    }else{
+      // staggered reveal
+      for(let i=0;i<10;i++){
+        await wait(140);
+        setCard(cards[i], items[i]);
+      }
+      // small extra for last reveal
+      await wait(500);
+    }
+
+    // log
+    addHistory(items);
+    saveState();
+    renderLog();
+
+    hintEl.textContent = `완료! (최고등급: ${RARITY[best].k})`;
+    disableUI(false);
+  }
+
+  function setCardInstant(cardEl, item){
+    const r = item.r;
+    cardEl.dataset.r = String(r);
+    const badge = cardEl.querySelector(".badge");
+    badge.className = "badge r"+r;
+    badge.textContent = RARITY[r].k;
+
+    cardEl.querySelector(".tag").textContent = item.type;
+    cardEl.querySelector(".glyph").textContent = RARITY[r].glyph;
+
+    const art = cardEl.querySelector(".art");
+    art.style.background = `
+      radial-gradient(120% 120% at 30% 25%, rgba(255,255,255,.12), rgba(0,0,0,0) 60%),
+      radial-gradient(120% 120% at 70% 75%, ${rarityColor(r)}, rgba(0,0,0,0) 65%),
+      rgba(0,0,0,.18)
+    `;
+    cardEl.querySelector(".name").textContent = item.name;
+    cardEl.querySelector(".desc").textContent = item.desc;
+
+    cardEl.querySelector(".front").style.opacity = "1";
+    cardEl.querySelector(".front").style.transform = "scale(1)";
+    cardEl.classList.add("revealed");
+  }
+
+  function wait(ms){ return new Promise(res => setTimeout(res, ms)); }
+})();
+</script>
+</body>
+</html>

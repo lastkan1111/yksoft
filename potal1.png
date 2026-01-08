@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Portal Sprite Animation</title>
+  <style>
+    html, body { margin:0; height:100%; background:#111; display:grid; place-items:center; }
+    canvas { background:#1a1a1a; border:1px solid rgba(255,255,255,0.12); }
+  </style>
+</head>
+<body>
+<canvas id="c" width="360" height="240"></canvas>
+
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+
+const img = new Image();
+img.src = 'portal_sprite_2frames.png';
+
+const FRAME_W = 71;     // 142/2
+const FRAME_H = 71;
+const FRAME_COUNT = 2;
+
+let frame = 0;
+let lastSwap = 0;
+const SWAP_MS = 180;    // 프레임 전환 속도 (원하면 120~300 사이로 조절)
+
+function loop(t){
+  requestAnimationFrame(loop);
+
+  if (!img.complete) return;
+
+  // 프레임 토글
+  if (t - lastSwap >= SWAP_MS) {
+    frame = (frame + 1) % FRAME_COUNT;
+    lastSwap = t;
+  }
+
+  // 화면 클리어
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // 포탈 위치/크기 (원하면 SCALE 조절)
+  const SCALE = 2.2;
+  const dw = FRAME_W * SCALE;
+  const dh = FRAME_H * SCALE;
+  const dx = (canvas.width - dw) / 2;
+  const dy = (canvas.height - dh) / 2;
+
+  // 시트에서 해당 프레임 잘라서 그리기
+  const sx = frame * FRAME_W;
+  const sy = 0;
+
+  // 픽셀 느낌 살리고 싶으면 아래 한 줄 켜기(선명하게)
+  // ctx.imageSmoothingEnabled = false;
+
+  ctx.drawImage(img, sx, sy, FRAME_W, FRAME_H, dx, dy, dw, dh);
+}
+
+img.onload = () => requestAnimationFrame(loop);
+</script>
+</body>
+</html>
